@@ -1,0 +1,35 @@
+<!-- index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>My Platformer</title>
+  
+  <!-- Link to your external CSS -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="canvas-wrapper">
+  <canvas id="gameCanvas" width="1920" height="1080"></canvas>
+</div>
+
+  <!-- Win popup -->
+  <div id="winOverlay" class="popup-overlay gorditas-regular">
+    <div class="popup">
+      <h2>You Won!</h2>
+      <button id="nextLevelBtn" class="fancy-btn">Next Level</button>
+    </div>
+  </div>
+
+  <!-- Lose popup -->
+  <div id="loseOverlay" class="popup-overlay gorditas-regular">
+    <div class="popup">
+      <h2>You Lost!</h2>
+      <button id="restartBtn" class="fancy-btn">Restart</button>
+    </div>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
