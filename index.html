@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>My Platformer</title>
+  <title>Jurassic Jump</title>
   
   <!-- Link to your external CSS -->
   <link rel="stylesheet" href="style.css">
@@ -14,9 +14,18 @@
   <canvas id="gameCanvas" width="1920" height="1080"></canvas>
 </div>
 
+<div id="startOverlay" class="popup-overlay gorditas-regular">
+  <div class="popup">
+    <img src="/src/assets/logo.png" class="logo">
+    <h2>Welcome to Jurassic Jump!</h2>
+    <button id="startGameBtn" class="fancy-btn">Start Game</button>
+  </div>
+</div>
+
   <!-- Win popup -->
   <div id="winOverlay" class="popup-overlay gorditas-regular">
     <div class="popup">
+      <img src="/src/assets/logo.png" class="logo">
       <h2>You Won!</h2>
       <button id="nextLevelBtn" class="fancy-btn">Next Level</button>
     </div>
@@ -25,9 +34,17 @@
   <!-- Lose popup -->
   <div id="loseOverlay" class="popup-overlay gorditas-regular">
     <div class="popup">
-      <h2>You Lost!</h2>
-      <button id="restartBtn" class="fancy-btn">Restart</button>
+      <img src="/src/assets/logo.png" class="logo">
+      <h2>Game Over!</h2>
+      <button id="restartBtn" class="fancy-btn" autofocus>Restart</button>
     </div>
+  </div>
+
+  <div id="debugPanel" style="position:fixed;bottom:10px;left:10px;background:#fff;padding:10px; display: none;">
+    <label>Go to X: <input type="number" id="jumpX" /></label>
+    <button id="jumpBtn">Jump</button>
+    <div>Player X: <span id="playerX">0</span></div>
+    <div>Player Y: <span id="playerY">0</span></div>
   </div>
 
   <script type="module" src="/src/main.js"></script>

@@ -8,6 +8,8 @@ export default class Player {
       this.width = image.width;
       this.height = image.height;
       this.facingLeft = false;
+      this.invincible = false;
+      this.flicker = false;
   
       this.gravity = 0.5;
   
@@ -19,6 +21,9 @@ export default class Player {
     }
   
     draw() {
+      if (this.flicker) {
+        return;
+      }
       this.c.save();
       if (this.facingLeft) {
         this.c.scale(-1, 1);
@@ -43,6 +48,8 @@ export default class Player {
         bottom: this.position.y + this.height - this.offsetBottom,
       };
     }
+
+    
   
     update() {
       this.draw();

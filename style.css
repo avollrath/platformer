@@ -21,7 +21,7 @@ html, body {
   margin: 0;
   padding: 0;
   overflow: hidden;
-  color: #333;         /* Fallback text color */
+  color: #fd7120;         /* Fallback text color */
 }
 
 body {
@@ -40,42 +40,24 @@ body {
 /* The canvas */
 #gameCanvas {
   display: block;
-  background: #fff6cf; /* Slightly deeper shade of yellow-ish */
   box-shadow: 0 0 12px rgba(0, 0, 0, 0.25);
   border-radius: 20px;
+  background-image: url('/src/assets/background.jpg'); /* Corrected syntax */
+  background-size: cover; /* Ensures the image covers the entire canvas */
+  background-position: center; /* Centers the image */
+  background-repeat: no-repeat; /* Prevents the image from repeating */
 }
 
-/* Score and Position displays */
-#scoreDisplay,
-#playerPositionDisplay {
-  position: fixed;
-  left: 10px;
-  padding: 8px;
-  font-size: 20px;
-  background: rgba(0,0,0,0.5);
-  color: #fff;
-  border-radius: 6px;
-  box-shadow: 2px 2px 6px rgba(0,0,0,0.3);
-}
-
-#scoreDisplay {
-    position: fixed;
-    top: 200px;
-    left: 50%; /* Center horizontally */
-    transform: translate(-50%, -50%); /* Adjust position due to element size */
-    padding: 16px 24px; /* Increase padding for a more prominent look */
-    font-size: 36px; /* Slightly larger font size */
-    background: rgba(0, 0, 0, 0.7); /* Dark transparent background */
-    color: yellow;
-    border-radius: 12px; /* Rounded corners */
-    box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.3); /* Add some shadow */
-    z-index: 100; /* Ensure it stays above other elements */
-  }
-#playerPositionDisplay {
-  top: 50px;
-}
 
 /* Popups */
+
+#startOverlay {
+
+  display: flex; /* Make it visible by default */
+ 
+}
+
+
 .popup-overlay {
   position: fixed; 
   top: 0; 
@@ -83,37 +65,52 @@ body {
   width: 100%; 
   height: 100%;
   background-color: rgba(0, 0, 0, 0.7);
-  display: none; /* hidden by default */
+  display: none;
   justify-content: center; 
   align-items: center;
   z-index: 9999;
 }
 
 .popup {
-  background: #fffde0; /* Light yellow */
-  padding: 2rem; 
-  border-radius: 8px; 
+  background: #43f73d4f;
+  padding: 5rem; 
+  padding-top: 14rem;
+  border-radius: 32px; 
   text-align: center;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  position: relative;
+  min-width: 800px;
+  backdrop-filter: blur(10px);
+
+  .logo {
+    position: absolute;
+    width: 600px;
+    top:0;
+    left: 50%; /* Center horizontally relative to the parent */
+  transform: translate(-50%, -50%); /* Offset by half its own size */
+  }
 }
 
 /* Buttons */
 button,
 .fancy-btn {
-  padding: 0.6rem 1.2rem; 
-  font-size: 1rem;
+  padding: 1rem 2rem; 
+  font-size: 2rem;
   cursor: pointer;
   border: none;
-  border-radius: 8px;
+  border-radius: 32px;
   color: #fff;
-  background-color: #4c9aff; /* bright-ish blue */
+  background-color: #fd7120;
   text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
   transition: background-color 0.2s, transform 0.2s;
+  font-family: "Gorditas", serif;
+  font-weight: 400;
+  font-style: normal;
 }
 
 /* Hover / active states for your fancy button */
 .fancy-btn:hover {
-  background-color: #3c89ef; /* slightly darker */
+  background-color: #e05515; /* slightly darker */
   transform: translateY(-2px);
 }
 .fancy-btn:active {
@@ -122,6 +119,8 @@ button,
 
 /* Optional: if you want a special style for .popup > h2, etc. */
 .popup h2 {
-  color: #222;
+  color: #FFF;
+  text-shadow: 3px 3px 1px #fd7120;
   margin-bottom: 1rem;
+  font-size: 3rem;
 }
