@@ -1,109 +1,146 @@
-// Enemy.js
 export default class Enemy {
     constructor({ x, y, width, patrolRange, speed, image }, context) {
-      this.initialX = x;             // Starting position
+      this.initialX = x;             
       this.position = { x, y };
       this.width = width;
-      this.height = 0;               // Will compute based on width and image aspect ratio
+      this.height = 0;               
       this.patrolRange = patrolRange; 
       this.speed = speed;
       this.context = context;
       this.image = image;
-      this.direction = 1;            // 1 for right, -1 for left
-      this.state = 'alive';          // 'alive' or 'defeated'
-      this.vy = 0;                   // Vertical velocity for falling after defeat
-      this.toRemove = false;         // Flag for removal off canvas
+      this.direction = 1;            
+      this.state = 'alive';          
+      this.vy = 0;                   
+      this.toRemove = false;         
   
-      // Compute height based on width once the image loads
+      // Sprite animation properties for a 4-frame sheet
+      this.totalFrames = 4;
+      this.frameIndex = 0;
+      this.frameRate = 100;        // milliseconds between frames
+      this.lastFrameTime = 0;
+        
+      // Once the image loads, compute dimensions and set up sprite dimensions
       if (this.image.complete) {
-        this.setHeightBasedOnWidth();
+        this.initializeDimensions();
       } else {
-        this.image.onload = () => this.setHeightBasedOnWidth();
+        this.image.onload = () => this.initializeDimensions();
       }
     }
-  
+    
+    initializeDimensions() {
+      this.setHeightBasedOnWidth();
+      // For sprite animations:
+      // Calculate source frame dimensions based on the sprite sheet.
+      this.spriteFrameWidth = this.image.width / this.totalFrames;
+      this.spriteFrameHeight = this.image.height;
+    }
+    
     setHeightBasedOnWidth() {
-      const aspectRatio = this.image.naturalHeight / this.image.naturalWidth;
+      // Calculate aspect ratio based on a single frame rather than the entire sheet
+      const singleFrameWidth = this.image.naturalWidth / this.totalFrames;
+      const aspectRatio = this.image.naturalHeight / singleFrameWidth;
       this.height = this.width * aspectRatio;
       console.log(`Enemy height set to ${this.height} for width ${this.width}`);
     }
-  
-    update() {
+    
+    updateAnimation(timestamp) {
+      if (this.state === 'alive') { 
+        if (timestamp - this.lastFrameTime > this.frameRate) {
+          this.frameIndex = (this.frameIndex + 1) % this.totalFrames;
+          this.lastFrameTime = timestamp;
+        }
+      }
+    }
+    
+    update(timestamp) {
       if (this.state === 'alive') {
         // Patrol logic
         this.position.x += this.speed * this.direction;
         // Check patrol boundaries relative to initialX
         if (this.position.x > this.initialX + this.patrolRange.right) {
-          this.direction = -1; // Change direction to left
+          this.direction = -1; 
         } else if (this.position.x < this.initialX + this.patrolRange.left) {
-          this.direction = 1;  // Change direction to right
+          this.direction = 1;  
         }
+        this.updateAnimation(timestamp);
       } else if (this.state === 'defeated') {
         this.vy += 1;
         this.position.y += this.vy;
-        // Remove enemy if off canvas (e.g., below canvas height)
         if (this.position.y > this.context.canvas.height) {
           this.toRemove = true;
         }
       }
     }
-  
+    
     draw(scrollOffset) {
-        if (this.state === 'alive') {
-          this.context.save();
-      
-          // Adjust drawing position based on scroll offset
-          const drawX = this.position.x - scrollOffset;
-      
-          if (this.direction > 0) {
-            // Flip the image horizontally if moving left
-            this.context.scale(-1, 1);
-            this.context.drawImage(
-              this.image,
-              -(drawX + this.width),
-              this.position.y,
-              this.width,
-              this.height
-            );
-          } else {
-            this.context.drawImage(
-              this.image,
-              drawX,
-              this.position.y,
-              this.width,
-              this.height
-            );
-          }
-      
-          this.context.restore();
-        } else if (this.state === 'defeated') {
-          // Draw defeated enemy rotated 180 degrees
-          this.context.save();
-          const drawX = this.position.x - scrollOffset;
-          this.context.translate(drawX + this.width / 2, this.position.y + this.height / 2);
-          this.context.rotate(Math.PI); // 180 degrees
-          this.context.drawImage(this.image, -this.width / 2, -this.height / 2, this.width, this.height);
-          this.context.restore();
+      const ctx = this.context;
+      if (this.state === 'alive') {
+        ctx.save();
+        // Calculate draw position adjusted for scroll
+        const drawX = this.position.x - scrollOffset;
+    
+        // For horizontal flipping based on direction
+        if (this.direction > 0) {
+          ctx.scale(-1, 1);
+          // Adjust X position because of horizontal flip
+          ctx.drawImage(
+            this.image,
+            this.frameIndex * this.spriteFrameWidth, 0,  // Source X, Y from sprite sheet
+            this.spriteFrameWidth, this.spriteFrameHeight, // Source width, height
+            -(drawX + this.width),  // Destination X (flipped)
+            this.position.y,        // Destination Y
+            this.width,
+            this.height
+          );
+        } else {
+          ctx.drawImage(
+            this.image,
+            this.frameIndex * this.spriteFrameWidth, 0,  // Source X, Y
+            this.spriteFrameWidth, this.spriteFrameHeight,
+            drawX,
+            this.position.y,
+            this.width,
+            this.height
+          );
         }
-      }
-      
-  
-    // Simple collision check with player (rectangular)
-    collidesWith(player, scrollOffset) {
-        const adjustedX = this.position.x - scrollOffset;
-        
-        return (
-          adjustedX < player.position.x + player.width &&
-          adjustedX + this.width > player.position.x &&
-          this.position.y < player.position.y + player.height &&
-          this.position.y + this.height > player.position.y
+        ctx.restore();
+      } else if (this.state === 'defeated') {
+        ctx.save();
+        const drawX = this.position.x - scrollOffset;
+        ctx.translate(drawX + this.width / 2, this.position.y + this.height / 2);
+        ctx.rotate(Math.PI); // 180 degrees rotation
+    
+        // Draw only one frame of the sprite sheet for the defeated state.
+        // Here, we're using the first frame (sourceX = 0).
+        ctx.drawImage(
+          this.image,
+          0,                       // sourceX: start at the beginning of the sprite sheet
+          0,                       // sourceY: top of the image
+          this.spriteFrameWidth,   // sourceWidth: width of one frame
+          this.spriteFrameHeight,  // sourceHeight: height of one frame
+          -this.width / 2,         // destinationX: adjusted for rotation
+          -this.height / 2,        // destinationY: adjusted for rotation
+          this.width,              // destinationWidth
+          this.height              // destinationHeight
         );
+    
+        ctx.restore();
       }
-  
-    // Call when player stomps enemy
+    }
+    
+    collidesWith(player, scrollOffset) {
+      const adjustedX = this.position.x - scrollOffset;
+      return (
+        adjustedX < player.position.x + player.width &&
+        adjustedX + this.width > player.position.x &&
+        this.position.y < player.position.y + player.height &&
+        this.position.y + this.height > player.position.y
+      );
+    }
+    
     defeat() {
       this.state = 'defeated';
-      this.vy = -15; // give an upward bounce initially
+      this.vy = -15;
     }
   }
   

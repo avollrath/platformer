@@ -147,11 +147,7 @@ function createImage(imageSrc, callback) {
   const backgroundImage = [];
   let genericObjects = [];
 
-  createImage('./img/background.jpg', (image) => {
-    image.width = 1920
-    image.height = 1080
-    backgroundImage.push(new Background({ x: 0, y: 0, image }));
-  });
+
 
   createImage('./img/tree.png', (treeImage) => {
     genericObjects = [

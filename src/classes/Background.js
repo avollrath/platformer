@@ -3,21 +3,39 @@ export default class Background {
     this.c = canvasContext;
     this.position = { x, y };
     this.image = image;
-    this.width = image.width;
-    this.height = image.height;
-    this.blurAmount = blurAmount; // Store blur amount
+    this.blurAmount = blurAmount; 
+    // Store original image dimensions for scaling
+    this.originalWidth = image.width;
+    this.originalHeight = image.height;
   }
 
-  draw() {
+  draw(scrollOffset = 0) {
+    const ctx = this.c;
+    
+    // Save canvas state and apply blur if needed
+    ctx.save();
     if (this.blurAmount > 0) {
-      this.c.save(); // Save the current state
-      this.c.filter = `blur(${this.blurAmount}px)`; // Apply blur
+      ctx.filter = `blur(${this.blurAmount}px)`;
     }
 
-    this.c.drawImage(this.image, this.position.x, this.position.y);
+    // Scaling factor for 120% size
+    const scale = 1.2;
+    const scaledWidth = this.originalWidth * scale;
+    const scaledHeight = this.originalHeight * scale;
 
-    if (this.blurAmount > 0) {
-      this.c.restore(); // Restore the canvas state
-    }
+    // Align the bottom of the background image with the bottom of the canvas
+    const canvasHeight = ctx.canvas.height;
+    const alignedY = canvasHeight - scaledHeight;
+
+    // Draw the background with scaling and parallax scroll offset
+    ctx.drawImage(
+      this.image,
+      this.position.x - scrollOffset,  // Adjust x-position by scroll offset
+      alignedY,                          // Align bottom of image with canvas bottom
+      scaledWidth,
+      scaledHeight
+    );
+
+    ctx.restore();
   }
 }

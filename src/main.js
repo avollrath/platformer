@@ -9,8 +9,87 @@ import Mushroom from "./classes/Mushroom.js";
 import Enemy from "./classes/Enemy.js";
 import ForegroundOverlay from "./classes/ForegroundOverlay.js";
 
+
 // Import your data
 import { levels } from "./levels.js";
+
+const assetsToLoad = [
+  // Core game assets
+  "/src/assets/char_sprite.png",
+  "/src/assets/platform.png",
+  "/src/assets/coin_sprite.png",
+  "/src/assets/enemy_sprite.png",
+  "/src/assets/cloud.png",
+  "/src/assets/heart.png",
+  "/src/assets/jump.mp3",
+  "/src/assets/walk.mp3",
+  "/src/assets/land.mp3",
+  "/src/assets/die.mp3",
+  "/src/assets/win.mp3",
+  "/src/assets/bounce.mp3",
+  "/src/assets/enemy.mp3",
+
+  // Level 1 assets
+  "/src/assets/backgroundMusic.mp3",
+  "/src/assets/frame.png",
+  "/src/assets/background_noClouds.jpg",
+  "/src/assets/ground.png",
+  "/src/assets/platform_w512.png",
+  "/src/assets/big_platform.png",
+  "/src/assets/mushroom_sprite.png",
+  "/src/assets/skeleton.png",
+  "/src/assets/tree.png",
+  "/src/assets/pillar.png",
+  "/src/assets/finish.png",
+
+  // Level 2 assets
+  "/src/assets/backgroundMusic2.mp3",
+  "/src/assets/background2.jpg"
+];
+
+
+
+function preloadAssets(assetUrls) {
+  return new Promise((resolve) => {
+    assetUrls.forEach(url => {
+      let element;
+      console.log('Loading:', url);
+
+      if (url.endsWith('.mp3')) {
+        element = new Audio();
+        // Use 'canplaythrough' to know when an audio file is ready
+        element.addEventListener('canplaythrough', assetLoaded, false);
+        element.addEventListener('error', () => {
+          console.error(`Error loading asset: ${url}`);
+          assetLoaded();
+        });
+      } else {
+        element = new Image();
+        element.onload = assetLoaded;
+        element.onerror = () => {
+          console.error(`Error loading asset: ${url}`);
+          assetLoaded();
+        };
+      }
+
+      element.src = url;
+    });
+
+    function assetLoaded() {
+      loadedAssets++;
+      console.log(`Loaded asset ${loadedAssets}/${totalAssets}`);
+      const progress = (loadedAssets / totalAssets) * 100;
+      loadingBar.style.width = progress + "%";
+
+      if (loadedAssets === totalAssets) {
+        resolve();
+      }
+    }
+  });
+}
+
+
+
 
 // =========== DOM ELEMENTS ===========
 const canvas = document.getElementById("gameCanvas");
@@ -22,6 +101,7 @@ const nextLevelBtn = document.getElementById("nextLevelBtn");
 const restartBtn = document.getElementById("restartBtn");
 const startOverlay = document.getElementById("startOverlay");
 const startGameBtn = document.getElementById("startGameBtn");
+const loadingBar = document.getElementById("loadingBar");
 
 // =========== AUDIO SETUP ===========
 let bgMusicPlayer = null; // Global variable to track the current music
@@ -60,6 +140,9 @@ function playSound(sound) {
 }
 
 // =========== GAME STATE VARIABLES ===========
+let loadedAssets = 0;
+const totalAssets = assetsToLoad.length;
+
 let player;
 let platforms = [];
 let coins = [];
@@ -151,12 +234,13 @@ function loadLevel(levelData) {
   gameState = "PLAYING";
   clouds = [];
   
-
+  c.clearRect(0, 0, canvas.width, canvas.height);
   if (levelData.bgMusic) {
     playBackgroundMusic(levelData.bgMusic);
   }
 
   if (levelData.background) {
+    backgrounds = [];
     const bgImage = createImage(levelData.background.image);
     backgrounds = [
       new Background(
@@ -176,7 +260,7 @@ function loadLevel(levelData) {
   loseOverlay.style.display = "none";
 
   // Initialize the player
-  const playerImg = createImage("/src/assets/char.png");
+  const playerImg = createImage("/src/assets/char_sprite.png");
   player = new Player(playerImg, c, canvas);
   player.position = { x: levelData.playerStart.x, y: levelData.playerStart.y };
   player.velocity = { x: 0, y: 0 };
@@ -227,7 +311,7 @@ function loadLevel(levelData) {
   });
 
   // Load coins
-  const coinImg = createImage("/src/assets/coin.png");
+  const coinImg = createImage("/src/assets/coin_sprite.png");
   levelData.coins.forEach(({ x, y }) => {
     coins.push(new Coin(x, y, coinImg, c));
   });
@@ -251,8 +335,10 @@ function init() {
 }
 
 let playerInitialized = false;
-// =========== ANIMATE (GAME LOOP) ===========
-function animate() {
+
+
+// =========== ANIMATE (GAME LOOP) ============================================================================
+function animate(timestamp) {
   if (!gameStarted) return;
   requestAnimationFrame(animate);
 
@@ -264,9 +350,11 @@ function animate() {
   // Clear canvas
   c.clearRect(0, 0, canvas.width, canvas.height);
 
-  // 1) Draw backgrounds
+  const backgroundScrollOffset = scrollOffset * 0.02; 
+
+  // Draw backgrounds with slower scroll offset
   backgrounds.forEach(bg => {
-    bg.draw("blur(5px)"); // Apply a 10px blur
+    bg.draw(backgroundScrollOffset);
   });
 
   clouds.forEach(cloud => {
@@ -296,6 +384,7 @@ function animate() {
 
   // 4) Mushrooms
   mushrooms.forEach(mushroom => {
+    mushroom.updateAnimation(timestamp);
     mushroom.draw();
     mushroom.checkCollision(player, () => {
       playSound(bounceSound);
@@ -307,7 +396,7 @@ function animate() {
 
   // 6) Coins
   coins.forEach(coin => {
-    coin.draw();
+    coin.draw(timestamp); // Pass the timestamp for animation
     coin.checkCollision(player, () => {
       score += 10;
       playSound(coinSound);
@@ -317,7 +406,7 @@ function animate() {
   // 7) Enemies
   enemies = enemies.filter(enemy => !enemy.toRemove);
   enemies.forEach(enemy => {
-    enemy.update();
+    enemy.update(timestamp);
     enemy.draw(scrollOffset);
   });
 
@@ -328,7 +417,9 @@ function animate() {
   }
 
   // 8) Update the player
+  player.updateAnimation(timestamp);
   player.update();
+  player.draw();
 
   if (foregroundOverlay) {
     foregroundOverlay.draw();
@@ -339,12 +430,16 @@ function animate() {
 
   updateDebugPanel(); 
 
+  if (isDrawingRectangle) {
+    drawRectangle(startX, startY, endX, endY);
+  }
+
 
   // =========== Horizontal movement logic ===========
   if (!movementLocked) {
     if (keys.right.pressed && player.position.x < 400) {
       player.velocity.x = 1;
-    } else if (keys.left.pressed && player.position.x > 100) {
+    } else if (keys.left.pressed && player.position.x > 350) {
       player.velocity.x = -1;
     } else {
       // Damping if no key pressed
@@ -545,6 +640,7 @@ function loseLife(cause) {
     document.getElementById("restartBtn").focus();
     playSound(dieSound);
   }
+
 }
 
 
@@ -607,49 +703,148 @@ restartBtn.addEventListener("click", () => {
 });
 
 let allCoinsText = "";
+let isDragging = false;
+let isDrawingRectangle = false;
+let startX = 0;
+let startY = 0;
+let endX = 0;
+let endY = 0;
+const coinSpacing = 100; // Spacing between coins
+const totalFrames = 8; // Total frames in the sprite
+const animationSpeed = 100; // Milliseconds per frame
+let dragTimeout = null; // Timeout to distinguish between click and rectangle draw
 
-canvas.addEventListener("click", (event) => {
+// Event Listeners
+canvas.addEventListener("mousedown", (event) => {
   const rect = canvas.getBoundingClientRect();
-  const clickX = event.clientX - rect.left;
-  const clickY = event.clientY - rect.top;
+  startX = event.clientX - rect.left;
+  startY = event.clientY - rect.top;
+  isDragging = false;
+  isDrawingRectangle = false;
 
-  // Capture the current scroll offset for coordinate calculations
+  // Set a timeout to detect a potential drag
+  dragTimeout = setTimeout(() => {
+    isDragging = true;
+    isDrawingRectangle = true; // Enter rectangle drawing mode
+  }, 150); // Threshold to distinguish between click and drag
+});
+
+canvas.addEventListener("mousemove", (event) => {
+  if (isDrawingRectangle) {
+    const rect = canvas.getBoundingClientRect();
+    endX = event.clientX - rect.left;
+    endY = event.clientY - rect.top;
+
+    // Visual feedback for the rectangle
+    drawRectangle(startX, startY, endX, endY);
+  }
+});
+
+canvas.addEventListener("mouseup", (event) => {
+  clearTimeout(dragTimeout);
+
+  if (isDrawingRectangle) {
+    const rect = canvas.getBoundingClientRect();
+    endX = event.clientX - rect.left;
+    endY = event.clientY - rect.top;
+
+    // Fill the rectangle with coins
+    fillRectangleWithCoins(startX, startY, endX, endY);
+  } else if (!isDragging) {
+    // Single-click functionality
+    const rect = canvas.getBoundingClientRect();
+    const clickX = event.clientX - rect.left;
+    const clickY = event.clientY - rect.top;
+    placeCoin(clickX, clickY);
+  }
+
+  isDragging = false;
+  isDrawingRectangle = false;
+});
+
+// Draw the Helper Rectangle
+function drawRectangle(x1, y1, x2, y2) {
+  c.save();
+  c.strokeStyle = "rgba(0, 0, 255, 0.5)"; // Semi-transparent blue
+  c.lineWidth = 2;
+  c.setLineDash([6]); // Dashed lines for the rectangle
+  c.strokeRect(
+    Math.min(x1, x2),
+    Math.min(y1, y2),
+    Math.abs(x2 - x1),
+    Math.abs(y2 - y1)
+  );
+  c.restore();
+}
+
+// Fill Rectangle with Coins
+function fillRectangleWithCoins(x1, y1, x2, y2) {
+  const startX = Math.min(x1, x2);
+  const startY = Math.min(y1, y2);
+  const width = Math.abs(x2 - x1);
+  const height = Math.abs(y2 - y1);
+
+  const coinImg = createImage("/src/assets/coin_sprite.png");
+  coinImg.onload = () => {
+    const frameWidth = coinImg.width / totalFrames; // Width of one frame
+    const frameHeight = coinImg.height; // Height of the sprite
+
+    // Adjust for coin centering
+    const adjustedStartX = startX + frameWidth / 2;
+    const adjustedStartY = startY + frameHeight / 2;
+    const adjustedWidth = width - frameWidth;
+    const adjustedHeight = height - frameHeight;
+
+    // Place coins inside the adjusted rectangle
+    for (let y = adjustedStartY; y <= adjustedStartY + adjustedHeight; y += coinSpacing) {
+      for (let x = adjustedStartX; x <= adjustedStartX + adjustedWidth; x += coinSpacing) {
+        placeCoin(x, y, coinImg, frameWidth, frameHeight);
+      }
+    }
+  };
+}
+
+// Place a Single Coin
+function placeCoin(clickX, clickY, coinImg = null, frameWidth = null, frameHeight = null) {
   const currentScrollOffset = scrollOffset;
 
-  // Visual placement: center coin relative to click on canvas
-  const coinImg = createImage("/src/assets/coin.png");
-  coinImg.onload = () => {
-    // Center the coin on the click for visual placement
-    const visualX = clickX - coinImg.width / 2;
-    const visualY = clickY - coinImg.height / 2;
+  if (!coinImg) {
+    coinImg = createImage("/src/assets/coin_sprite.png");
+    coinImg.onload = () => {
+      const frameWidth = coinImg.width / totalFrames;
+      const frameHeight = coinImg.height;
+      placeCoin(clickX, clickY, coinImg, frameWidth, frameHeight);
+    };
+    return;
+  }
 
-    // Place the coin visually using canvas-relative coordinates
-    coins.push(new Coin(visualX, visualY, coinImg, c));
+  const visualX = clickX - frameWidth / 2;
+  const visualY = clickY - frameHeight / 2;
 
-    // Calculate the world coordinates for storage
-    const worldX = Math.round(clickX + currentScrollOffset - coinImg.width / 2);
-    const worldY = Math.round(clickY - coinImg.height / 2);
+  // Push the coin to the visual array
+  coins.push(new Coin(visualX, visualY, coinImg, c));
 
-    // Format and append the new coin data to the accumulated text
-    const coinData = `{ x: ${worldX}, y: ${worldY} },\n`;
-    allCoinsText += coinData;
+  // Calculate and store world coordinates for clipboard
+  const worldX = Math.round(clickX + currentScrollOffset - frameWidth / 2);
+  const worldY = Math.round(clickY - frameHeight / 2);
 
-    // Update clipboard with the entire accumulated data
-    navigator.clipboard.writeText(allCoinsText)
-      .then(() => {
-        console.log("Updated clipboard with:\n", allCoinsText);
-      })
-      .catch(err => {
-        console.error("Clipboard update failed:", err);
-      });
+  const coinData = `{ x: ${worldX}, y: ${worldY} },\n`;
+  allCoinsText += coinData;
 
-    // Optional visual feedback at click location
-    c.fillStyle = "red";
-    c.beginPath();
-    c.arc(clickX, clickY, 10, 0, Math.PI * 2);
-    c.fill();
-  };
-});
+  navigator.clipboard.writeText(allCoinsText)
+    .then(() => console.log("Updated clipboard with:\n", allCoinsText))
+    .catch(err => console.error("Clipboard update failed:", err));
+
+  // Optional visual feedback at click location
+  c.fillStyle = "red";
+  c.beginPath();
+  c.arc(clickX, clickY, 10, 0, Math.PI * 2);
+  c.fill();
+}
+
+
+
+
 
 
 function teleportPlayerTo(xPosition) {
@@ -694,13 +889,53 @@ window.addEventListener("keydown", (event) => {
 
 let gameStarted = false;
 // Start Overlay 
-startGameBtn.addEventListener("click", () => {
+startGameBtn.addEventListener("click", async () => {
   startOverlay.style.display = "none";
-  init();
+
   gameStarted = true;
-  setTimeout(() => {
-    animate();
-  }, 200);
+  animate();
 });
+
+const loadingMessages = [
+  "Digging up dinosaurs...",
+  "Brushing off fossils...",
+  "Assembling the T-Rex...",
+  "Searching for triceratops footprints...",
+  "Feeding the velociraptors...",
+  "Calibrating the time machine...",
+  "Polishing dinosaur bones...",
+  "Adjusting the pterodactyl wings...",
+  "Mixing lava for volcano effects...",
+  "Sharpening prehistoric tools..."
+];
+
+
+
+function updateLoadingText() {
+  const loadingTextElement = document.querySelector("#loadingOverlay .loading-text");
+  // Select a random message from the array
+  const randomIndex = Math.floor(Math.random() * loadingMessages.length);
+  loadingTextElement.textContent = loadingMessages[randomIndex];
+}
+
+document.addEventListener("DOMContentLoaded", async () => {
+  startOverlay.style.display = "none";
+  // Optionally show the overlay right away
+  document.getElementById("loadingOverlay").style.display = "flex";
+  updateLoadingText();
+  let loadingTextInterval = setInterval(updateLoadingText, 2000);
+
+  // Start preloading assets
+  await preloadAssets(assetsToLoad); 
+  init();
+  clearInterval(loadingTextInterval);
+
+  // Hide the loading overlay once all assets are preloaded
+  document.getElementById("loadingOverlay").style.display = "none";
+  startOverlay.style.display = "flex";
+  canvas.style.display = "block";
+});
+
+
 
 
