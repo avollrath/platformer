@@ -21,6 +21,7 @@ const assetsToLoad = [
   "/src/assets/enemy_sprite.png",
   "/src/assets/cloud.png",
   "/src/assets/heart.png",
+  "/src/assets/menu_frame.png",
   "/src/assets/jump.mp3",
   "/src/assets/walk.mp3",
   "/src/assets/land.mp3",
@@ -259,13 +260,7 @@ function loadLevel(levelData) {
   winOverlay.style.display = "none";
   loseOverlay.style.display = "none";
 
-  // Initialize the player
-  const playerImg = createImage("/src/assets/char_sprite.png");
-  player = new Player(playerImg, c, canvas);
-  player.position = { x: levelData.playerStart.x, y: levelData.playerStart.y };
-  player.velocity = { x: 0, y: 0 };
-  console.log("Player position on load level:", player.position);
-  console.log("Player velocity on load level:", player.velocity);
+
 
     // If you want to generate extra clouds:
     generateClouds({
@@ -316,14 +311,21 @@ function loadLevel(levelData) {
     coins.push(new Coin(x, y, coinImg, c));
   });
 
-  levelData.enemies.forEach(({ x, y, width, height, patrolRange, speed, image }) => {
+  levelData.enemies.forEach(({ x, y, width, height, patrolRange, speed, image, totalFrames, frameRate }) => {
     const enemyImage = createImage(image);
-    enemies.push(new Enemy({ x, y, width, height, patrolRange, speed, image: enemyImage }, c));
+    enemies.push(new Enemy({ x, y, width, height, patrolRange, speed, image: enemyImage, totalFrames, frameRate }, c));
   });
 
   // Finish
   const finishImg = createImage(levelData.finish.image);
   finish = new Finish({ x: levelData.finish.x, y: levelData.finish.y, image: finishImg }, c);
+
+  const playerImg = createImage("/src/assets/char_sprite.png");
+  player = new Player(playerImg, c, canvas);
+  player.position = { x: levelData.playerStart.x, y: levelData.playerStart.y };
+  player.velocity = { x: 0, y: 0 };
+  console.log("Player position on load level:", player.position);
+  console.log("Player velocity on load level:", player.velocity);
 }
 
 // =========== INIT (start the current level) ===========
@@ -443,7 +445,7 @@ function animate(timestamp) {
       player.velocity.x = -1;
     } else {
       // Damping if no key pressed
-      player.velocity.x *= 0.9;
+      player.velocity.x *= 0.99;
     }
   } else {
     // Lock movement during knockback
@@ -471,10 +473,11 @@ function animate(timestamp) {
 
 
   // =========== Collision with platforms ===========
+  let grounded = false;
   platforms.forEach(platform => {
     const playerBox = player.getCollisionBox();
     const platformTop = platform.getCollisionTop();
-
+  
     if (
       playerBox.bottom <= platformTop &&
       playerBox.bottom + player.velocity.y >= platformTop &&
@@ -483,8 +486,12 @@ function animate(timestamp) {
     ) {
       // Land on platform
       player.velocity.y = 0;
+      grounded = true;  // Player is grounded on at least one platform
     }
   });
+  
+  // Set the player's grounded state after checking all platforms
+  player.isOnGround = grounded;
 
   // =========== Check if player fell out of the world ===========
   if (!player || !playerInitialized) return;

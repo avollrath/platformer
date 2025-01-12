@@ -5,6 +5,7 @@ export default class Player {
     this.position = { x: 100, y: 100 };
     this.velocity = { x: 0, y: 1 };
     this.image = image;
+    this.isOnGround = false;
     
     // Animation properties for an 8-frame sprite sheet
     this.totalFrames = 8;
@@ -28,14 +29,47 @@ export default class Player {
     this.offsetLeft = 50; 
     this.offsetRight = 50; 
     this.offsetTop = 0; 
-    this.offsetBottom = 10; 
+    this.offsetBottom = 3; 
   }
 
   draw() {
     if (this.flicker) {
       return;
     }
+    const ctx = this.c;
     this.c.save();
+
+    // Draw shadow only if the player is on the ground
+  if (this.isOnGround) {
+    // *** Draw Custom Bottom Shadow with Blur ***
+    const shadowCenterX = this.position.x + this.width / 2;
+    const shadowCenterY = this.position.y + this.height * 0.95;
+    const shadowWidth = this.width * 0.7;
+    const shadowHeight = this.height * 0.05;
+
+    const gradient = ctx.createRadialGradient(
+      shadowCenterX, shadowCenterY, 0,
+      shadowCenterX, shadowCenterY, shadowWidth / 2
+    );
+    gradient.addColorStop(0, 'rgba(13, 56, 18, 0.64)');
+    gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+
+    ctx.filter = 'blur(8px)';
+    ctx.fillStyle = gradient;
+    ctx.beginPath();
+    ctx.ellipse(
+      shadowCenterX,
+      shadowCenterY,
+      shadowWidth / 2,
+      shadowHeight / 2,
+      0,
+      0,
+      2 * Math.PI
+    );
+    ctx.fill();
+    ctx.filter = 'none';
+    // *** End Drawing Custom Blurred Shadow ***
+  }
 
     // Determine drawing parameters for facing direction
     if (this.facingLeft) {

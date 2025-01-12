@@ -49,7 +49,68 @@ export const levels = [
         { x: 16700, y: 200, image: "/src/assets/platform_w512.png", collisionOffset: 30 },
       ],
 
-      enemies: [],
+      enemies: [ 
+        {
+        x: 3500,
+        y: 815,
+        width: 220,
+        patrolRange: { left: -300, right: 300 }, // relative range for patrol
+        speed: 0.3,
+        image: "/src/assets/snail_sprite.png",
+        totalFrames: 5,
+        frameRate: 200
+      },
+      {
+        x: 6450,
+        y: 815,
+        width: 220,
+        patrolRange: { left: -300, right: 300 }, // relative range for patrol
+        speed: 0.3,
+        image: "/src/assets/snail_sprite.png",
+        totalFrames: 5,
+        frameRate: 200
+      },
+      {
+        x: 10870,
+        y: 645,
+        width: 220,
+        patrolRange: { left: -100, right: 100 }, // relative range for patrol
+        speed: 0.3,
+        image: "/src/assets/snail_sprite.png",
+        totalFrames: 5,
+        frameRate: 200
+      },
+      {
+        x: 18180,
+        y: 815,
+        width: 220,
+        patrolRange: { left: -300, right: 300 }, // relative range for patrol
+        speed: 0.3,
+        image: "/src/assets/snail_sprite.png",
+        totalFrames: 5,
+        frameRate: 200
+      },
+      {
+        x: 19832,
+        y: 815,
+        width: 220,
+        patrolRange: { left: -300, right: 300 }, // relative range for patrol
+        speed: 0.3,
+        image: "/src/assets/snail_sprite.png",
+        totalFrames: 5,
+        frameRate: 200
+      },
+      {
+        x: 21324,
+        y: 815,
+        width: 220,
+        patrolRange: { left: -300, right: 300 }, // relative range for patrol
+        speed: 0.3,
+        image: "/src/assets/snail_sprite.png",
+        totalFrames: 5,
+        frameRate: 200
+      },
+    ],
   
       // Any special “mushrooms” (bounce pads)
       mushrooms: [

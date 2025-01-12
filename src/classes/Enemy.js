@@ -1,5 +1,5 @@
 export default class Enemy {
-    constructor({ x, y, width, patrolRange, speed, image }, context) {
+    constructor({ x, y, width, patrolRange, speed, image, totalFrames = 4, frameRate = 100 }, context) {
       this.initialX = x;             
       this.position = { x, y };
       this.width = width;
@@ -14,9 +14,9 @@ export default class Enemy {
       this.toRemove = false;         
   
       // Sprite animation properties for a 4-frame sheet
-      this.totalFrames = 4;
+      this.totalFrames = totalFrames;
       this.frameIndex = 0;
-      this.frameRate = 100;        // milliseconds between frames
+      this.frameRate = frameRate;        // milliseconds between frames
       this.lastFrameTime = 0;
         
       // Once the image loads, compute dimensions and set up sprite dimensions
@@ -76,8 +76,45 @@ export default class Enemy {
       const ctx = this.context;
       if (this.state === 'alive') {
         ctx.save();
+
+          
         // Calculate draw position adjusted for scroll
         const drawX = this.position.x - scrollOffset;
+
+   // *** Draw Custom Bottom Shadow with Blur ***
+    // Determine the center of the ellipse
+    const shadowCenterX = drawX + this.width / 2;
+    // Position the shadow slightly overlapping the bottom of the enemy
+    const shadowCenterY = this.position.y + this.height * 0.95; 
+    // Adjust shadow dimensions for a softer, closer look
+    const shadowWidth = this.width * 1.1;   
+    const shadowHeight = this.height * 0.2; 
+
+    // Create radial gradient for a soft fade
+    const gradient = ctx.createRadialGradient(
+      shadowCenterX, shadowCenterY, 0,                       
+      shadowCenterX, shadowCenterY, shadowWidth / 2          
+    );
+    gradient.addColorStop(0, 'rgb(12, 48, 9)');  
+    gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');    
+
+    // Set blur filter for the shadow
+    ctx.filter = 'blur(6px)';  
+    ctx.fillStyle = gradient;
+    ctx.beginPath();
+    ctx.ellipse(
+      shadowCenterX,
+      shadowCenterY,
+      shadowWidth / 2,
+      shadowHeight / 2,
+      0,
+      0,
+      2 * Math.PI
+    );
+    ctx.fill();
+    // Reset filter so it doesn't affect subsequent drawings
+    ctx.filter = 'none';  
+    // *** End Drawing Custom Blurred Shadow ***
     
         // For horizontal flipping based on direction
         if (this.direction > 0) {
@@ -106,6 +143,7 @@ export default class Enemy {
         ctx.restore();
       } else if (this.state === 'defeated') {
         ctx.save();
+        ctx.filter = 'blur(2px)';
         const drawX = this.position.x - scrollOffset;
         ctx.translate(drawX + this.width / 2, this.position.y + this.height / 2);
         ctx.rotate(Math.PI); // 180 degrees rotation
@@ -124,6 +162,7 @@ export default class Enemy {
           this.height              // destinationHeight
         );
     
+        ctx.filter = 'none';
         ctx.restore();
       }
     }
