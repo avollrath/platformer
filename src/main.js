@@ -22,6 +22,7 @@ const assetsToLoad = [
   "/src/assets/cloud.png",
   "/src/assets/heart.png",
   "/src/assets/menu_frame.png",
+  "/src/assets/fire_sprite.png",
   "/src/assets/jump.mp3",
   "/src/assets/walk.mp3",
   "/src/assets/land.mp3",
@@ -54,7 +55,6 @@ function preloadAssets(assetUrls) {
   return new Promise((resolve) => {
     assetUrls.forEach(url => {
       let element;
-      console.log('Loading:', url);
 
       if (url.endsWith('.mp3')) {
         element = new Audio();
@@ -78,7 +78,6 @@ function preloadAssets(assetUrls) {
 
     function assetLoaded() {
       loadedAssets++;
-      console.log(`Loaded asset ${loadedAssets}/${totalAssets}`);
       const progress = (loadedAssets / totalAssets) * 100;
       loadingBar.style.width = progress + "%";
 
@@ -129,7 +128,7 @@ const walkSound = new Audio("/src/assets/walk.mp3");
 const landSound = new Audio("/src/assets/land.mp3");
 const dieSound = new Audio("/src/assets/die.mp3");
 const coinSound = new Audio("/src/assets/coin.mp3");
-coinSound.volume = 0.3;
+coinSound.volume = 0.1;
 const winSound = new Audio("/src/assets/win.mp3");
 const bounceSound = new Audio("/src/assets/bounce.mp3");
 const enemySound = new Audio("/src/assets/enemy.mp3");
@@ -150,6 +149,7 @@ let coins = [];
 let backgrounds = [];
 let mushrooms = [];
 let genericObjects = [];
+let genericObjectsFront = [];
 let enemies = [];
 let finish;
 let movementLocked = false;
@@ -161,7 +161,7 @@ let score = 0;
 let gameState = "PLAYING"; // 'PLAYING', 'WIN', 'LOSE'
 
 // Multi-level support
-let currentLevelIndex = 0;
+let currentLevelIndex = 1;
 const totalLevels = levels.length;
 
 // Player starts with 3 lives
@@ -213,7 +213,6 @@ function generateClouds({ startX, endX, spacingRange = [600, 1000], yRange = [50
       currentX += spacing;
     }
 
-    console.log("Generated clouds:", clouds.length);
   };
 }
 
@@ -228,11 +227,11 @@ function loadLevel(levelData) {
   backgrounds = [];
   mushrooms = [];
   genericObjects = [];
+  genericObjectsFront = [];
   enemies = [];
   score = 0;
   lives = 3;
   scrollOffset = 0;
-  gameState = "PLAYING";
   clouds = [];
   
   c.clearRect(0, 0, canvas.width, canvas.height);
@@ -298,11 +297,18 @@ function loadLevel(levelData) {
   }
 
   // Load generic objects
-  levelData.genericObjects.forEach(({ x, y, image, scrollSpeed = 1, scale = 1 }) => {
+  levelData.genericObjects.forEach(({ x, y, image, scrollSpeed = 1, scale = 1, totalFrames, frameRate, filter }) => {
     const objImg = createImage(image);
-    genericObjects.push(
-      new GenericObject({ x, y, image: objImg, scrollSpeed, scale }, c)
-    );
+    
+    if (image.includes("fire_sprite.png")) {
+      genericObjectsFront.push(
+        new GenericObject({ x, y, image: objImg, scrollSpeed, scale, totalFrames, frameRate, filter }, c)
+      );
+    } else {
+      genericObjects.push(
+        new GenericObject({ x, y, image: objImg, scrollSpeed, scale, totalFrames, frameRate, filter }, c)
+      );
+    }
   });
 
   // Load coins
@@ -324,16 +330,14 @@ function loadLevel(levelData) {
   player = new Player(playerImg, c, canvas);
   player.position = { x: levelData.playerStart.x, y: levelData.playerStart.y };
   player.velocity = { x: 0, y: 0 };
-  console.log("Player position on load level:", player.position);
-  console.log("Player velocity on load level:", player.velocity);
+
+  gameState = "PLAYING";
 }
 
 // =========== INIT (start the current level) ===========
 function init() {
   const levelData = levels[currentLevelIndex]; 
   loadLevel(levelData);
-  console.log("Player position on init:", player.position);
-  console.log("Player velocity on init:", player.velocity);
 }
 
 let playerInitialized = false;
@@ -371,8 +375,7 @@ function animate(timestamp) {
   genericObjects.forEach(obj => {
     if (obj.update) obj.update();
     c.save();
-    c.filter = "blur(2px)";
-    obj.draw();
+    obj.draw(null, timestamp);  // Pass the timestamp here
     c.restore();
   });
 
@@ -382,6 +385,13 @@ function animate(timestamp) {
     gameState = "WIN";
     winOverlay.style.display = "flex";
     playSound(winSound);
+  });
+
+  genericObjectsFront.forEach(obj => {
+    if (obj.update) obj.update();
+    c.save();
+    obj.draw(null, timestamp);
+    c.restore();
   });
 
   // 4) Mushrooms
@@ -458,6 +468,7 @@ function animate(timestamp) {
       scrollOffset += 5;
       platforms.forEach(p => { p.position.x -= 5; });
       genericObjects.forEach(g => { g.position.x -= 5 * g.scrollSpeed; });
+      genericObjectsFront.forEach(g => { g.position.x -= 5 * g.scrollSpeed; });
       coins.forEach(coin => { coin.position.x -= 5; });
       mushrooms.forEach(m => { m.position.x -= 5; });
       finish.position.x -= 5;
@@ -465,6 +476,7 @@ function animate(timestamp) {
       scrollOffset -= 5;
       platforms.forEach(p => { p.position.x += 5; });
       genericObjects.forEach(g => { g.position.x += 5 * g.scrollSpeed; });
+      genericObjectsFront.forEach(g => { g.position.x += 5 * g.scrollSpeed; });
       coins.forEach(coin => { coin.position.x += 5; });
       mushrooms.forEach(m => { m.position.x += 5; });
       finish.position.x += 5;
@@ -502,9 +514,7 @@ function animate(timestamp) {
   // =========== Collision with enemies ===========
   enemies.forEach(enemy => {
     if (enemy.state === "alive" && enemy.collidesWith(player, scrollOffset)) {
-      console.log(
-        `Collision detected: Player bottom = ${player.position.y + player.height}, Enemy top = ${enemy.position.y}`
-      );
+     
   
       const playerBottom = player.position.y + player.height;
       const enemyTop = enemy.position.y;
@@ -521,12 +531,10 @@ function animate(timestamp) {
   
       // If the player is invincible, ignore damage logic
       if (player.invincible) {
-        console.log("Player is invincible, ignoring enemy hit.");
         return;
       }
   
       // Player hit from the side
-      console.log("Player hit from side!");
   
       // Lock movement during knockback
       movementLocked = true;
@@ -632,6 +640,7 @@ function loseLife(cause) {
       scrollOffset = 0;
       platforms.forEach(platform => platform.position.x += scrollAdjustment);
       genericObjects.forEach(obj => obj.position.x += scrollAdjustment * obj.scrollSpeed);
+      genericObjectsFront.forEach(obj => obj.position.x += scrollAdjustment * obj.scrollSpeed);
       coins.forEach(coin => coin.position.x += scrollAdjustment);
       mushrooms.forEach(mushroom => mushroom.position.x += scrollAdjustment);
       finish.position.x += scrollAdjustment;
@@ -641,7 +650,6 @@ function loseLife(cause) {
     }
   } else {
     // No lives left -> game over
-    console.log("Game over.");
     gameState = "LOSE";
     loseOverlay.style.display = "flex";
     document.getElementById("restartBtn").focus();
@@ -699,7 +707,6 @@ nextLevelBtn.addEventListener("click", () => {
     init(); // load next level
   } else {
     // No more levels => for now just reload the last level or do something else
-    console.log("All levels complete!");
     currentLevelIndex = 0;
     init();
   }
@@ -863,6 +870,7 @@ function teleportPlayerTo(xPosition) {
   
   platforms.forEach(platform => { platform.position.x -= delta; });
   genericObjects.forEach(obj => { obj.position.x -= delta * obj.scrollSpeed; });
+  genericObjectsFront.forEach(obj => { obj.position.x -= delta * obj.scrollSpeed; });
   coins.forEach(coin => { coin.position.x -= delta; });
   mushrooms.forEach(mushroom => { mushroom.position.x -= delta; });
   finish.position.x -= delta;

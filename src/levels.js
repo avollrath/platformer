@@ -130,7 +130,29 @@ export const levels = [
         { x: 7300, y: 400, image: "/src/assets/tree.png",     scrollSpeed: 0.4 },
         { x: 2500, y: 200, image: "/src/assets/pillar.png",   scrollSpeed: 0.8 },
         { x: 10300,y: 200, image: "/src/assets/pillar.png",   scrollSpeed: 0.8 },
-        // If you want to auto-generate more clouds, do it in your main code using levelEnd
+
+
+        { 
+          x: 23010, 
+          y: 620, 
+          image: "/src/assets/fire_sprite.png", 
+          scrollSpeed: 1, 
+          totalFrames: 6,     
+          frameRate:140,
+          filter: "none",
+          scale: 1.8
+        },
+        { 
+          x: 23402, 
+          y: 620, 
+          image: "/src/assets/fire_sprite.png", 
+          scrollSpeed: 1, 
+          totalFrames: 6,     
+          frameRate:130,
+          filter: "none",
+          scale: 1.8
+        },
+     
       ],
   
       // Coins (x, y only, image can be used from a single coin sprite)
@@ -628,7 +650,8 @@ export const levels = [
           width: 150,
           patrolRange: { left: -200, right: 200 }, // relative range for patrol
           speed: 1,
-          image: "/src/assets/enemy_sprite.png"
+          image: "/src/assets/enemy_sprite.png",
+          frameRate: 200
         },
         {
           x: 1900,

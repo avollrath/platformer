@@ -1,5 +1,5 @@
 export default class Enemy {
-    constructor({ x, y, width, patrolRange, speed, image, totalFrames = 4, frameRate = 100 }, context) {
+    constructor({ x, y, width, patrolRange, speed, image, totalFrames = 4, frameRate = 200 }, context) {
       this.initialX = x;             
       this.position = { x, y };
       this.width = width;

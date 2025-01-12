@@ -1,50 +1,100 @@
-// src/classes/GenericObject.js
 export default class GenericObject {
-  constructor({ x, y, image, scrollSpeed = 1, sway = false, scale = 1, swaySpeed = 0.5, swayAmplitude = 10, moveSpeed = 0 }, canvasContext) {
+  constructor(
+    { 
+      x, y, image, scrollSpeed = 1, sway = false, scale = 1, 
+      swaySpeed = 0.5, swayAmplitude = 10, moveSpeed = 0,
+      totalFrames = 1, frameRate = 100,
+      filter = "blur(2px)"  // Default filter
+    }, 
+    canvasContext
+  ) {
     this.c = canvasContext;
-    this.initialPosition = { x, y }; // Store the initial position
+    this.initialPosition = { x, y };
     this.position = { x, y };
-    this.image = image;
-    this.width = image.width * scale; 
-    this.height = image.height * scale;
+    this.image = image;  
     this.scrollSpeed = scrollSpeed;
-    this.sway = sway; // Only sway if true
-    this.swaySpeed = swaySpeed; // How quickly the sway oscillates
-    this.swayAmplitude = swayAmplitude; // How far the sway moves
-    this.moveSpeed = moveSpeed; // Speed at which the object drifts horizontally
-    this.time = 0; // Used to calculate the oscillation
+    this.sway = sway;
+    this.swaySpeed = swaySpeed;
+    this.swayAmplitude = swayAmplitude;
+    this.moveSpeed = moveSpeed;
+    this.time = 0;
     this.scale = scale;
+
+    // Store the filter property
+    this.filter = filter; 
+
+    // Animation properties
+    this.totalFrames = totalFrames;
+    this.frameRate = frameRate;
+    this.frameIndex = 0;
+    this.lastFrameTime = 0;
+
+    // Set dimensions and calculate frame sizes if needed
+    this.width = this.image.width * scale;
+    this.height = this.image.height * scale;
+
+    if(this.totalFrames > 1) {
+      this.spriteFrameWidth = (this.image.width / this.totalFrames) * scale;
+      this.spriteFrameHeight = this.image.height * scale;
+      this.width = this.spriteFrameWidth;
+      this.height = this.spriteFrameHeight;
+    }
   }
 
   update() {
     if (this.sway) {
-      this.time += this.swaySpeed; // Increment the time for the oscillation
-      this.position.y = this.initialPosition.y + Math.sin(this.time) * this.swayAmplitude; // Apply sway to the y-position
+      this.time += this.swaySpeed;
+      this.position.y = this.initialPosition.y + Math.sin(this.time) * this.swayAmplitude;
     }
-    // Drift to the left over time
     this.position.x -= this.moveSpeed;
   }
 
-  /**
-   * Draw the object on the canvas.
-   * @param {string|null} filter - Optional CSS filter (e.g., "blur(5px)").
-   */
-  draw(filter = null) {
-    if (filter) {
-      this.c.save(); // Save the current canvas state
-      this.c.filter = filter; // Apply the filter
+  updateAnimation(timestamp) {
+    if (this.totalFrames > 1) {
+      if (timestamp - this.lastFrameTime > this.frameRate) {
+        this.frameIndex = (this.frameIndex + 1) % this.totalFrames;
+        this.lastFrameTime = timestamp;
+      }
+    }
+  }
+
+  draw(filterParam = null, timestamp = null) {
+    // Use the object's filter or an override passed to draw()
+    const effectiveFilter = filterParam !== null ? filterParam : this.filter;
+
+    if(this.totalFrames > 1 && timestamp !== null) {
+      this.updateAnimation(timestamp);
+    }
+    
+    if (effectiveFilter) {
+      this.c.save();
+      this.c.filter = effectiveFilter;
     }
 
-    this.c.drawImage(
-      this.image,
-      this.position.x,
-      this.position.y,
-      this.width,  // Scaled width
-      this.height  // Scaled height
-    );
+    if(this.totalFrames > 1) {
+      this.c.drawImage(
+        this.image,
+        this.frameIndex * (this.image.width / this.totalFrames), // source x
+        0,                                                       // source y
+        this.image.width / this.totalFrames,                   // source width
+        this.image.height,                                     // source height
+        this.position.x,
+        this.position.y,
+        this.width,
+        this.height
+      );
+    } else {
+      this.c.drawImage(
+        this.image,
+        this.position.x,
+        this.position.y,
+        this.width,
+        this.height
+      );
+    }
 
-    if (filter) {
-      this.c.restore(); // Restore the canvas state to remove the filter
+    if (effectiveFilter) {
+      this.c.restore();
     }
   }
 }
