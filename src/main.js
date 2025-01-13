@@ -13,6 +13,8 @@ import ForegroundOverlay from "./classes/ForegroundOverlay.js";
 // Import your data
 import { levels } from "./levels.js";
 
+const images = {};
+
 const assetsToLoad = [
   // Core game assets
   "/src/assets/char_sprite.png",
@@ -43,22 +45,31 @@ const assetsToLoad = [
   "/src/assets/tree.png",
   "/src/assets/pillar.png",
   "/src/assets/finish.png",
+  "/src/assets/snail_sprite.png",
+  "/src/assets/fire_sprite.png",
+  
 
   // Level 2 assets
   "/src/assets/backgroundMusic2.mp3",
-  "/src/assets/background2.jpg"
+  "/src/assets/background2.jpg",
+
+  // Leve 3 assets
+   "/src/assets/backgroundMusic3.mp3",
+  "/src/assets/background3.jpg"
+
 ];
 
 
 
 function preloadAssets(assetUrls) {
   return new Promise((resolve) => {
+    let loadedAssets = 0;
+
     assetUrls.forEach(url => {
       let element;
 
       if (url.endsWith('.mp3')) {
         element = new Audio();
-        // Use 'canplaythrough' to know when an audio file is ready
         element.addEventListener('canplaythrough', assetLoaded, false);
         element.addEventListener('error', () => {
           console.error(`Error loading asset: ${url}`);
@@ -66,7 +77,10 @@ function preloadAssets(assetUrls) {
         });
       } else {
         element = new Image();
-        element.onload = assetLoaded;
+        element.onload = () => {
+          images[url] = element;  // Store the loaded image
+          assetLoaded();
+        };
         element.onerror = () => {
           console.error(`Error loading asset: ${url}`);
           assetLoaded();
@@ -78,10 +92,10 @@ function preloadAssets(assetUrls) {
 
     function assetLoaded() {
       loadedAssets++;
-      const progress = (loadedAssets / totalAssets) * 100;
+      const progress = (loadedAssets / assetUrls.length) * 100;
       loadingBar.style.width = progress + "%";
 
-      if (loadedAssets === totalAssets) {
+      if (loadedAssets === assetUrls.length) {
         resolve();
       }
     }
@@ -160,8 +174,8 @@ let scrollOffset = 0;
 let score = 0;
 let gameState = "PLAYING"; // 'PLAYING', 'WIN', 'LOSE'
 
-// Multi-level support
-let currentLevelIndex = 1;
+// Multi-level support *****************************************************************************************************************************************************************************
+let currentLevelIndex = 2;
 const totalLevels = levels.length;
 
 // Player starts with 3 lives
@@ -239,52 +253,33 @@ function loadLevel(levelData) {
     playBackgroundMusic(levelData.bgMusic);
   }
 
-  if (levelData.background) {
-    backgrounds = [];
-    const bgImage = createImage(levelData.background.image);
-    backgrounds = [
-      new Background(
-        {
-          x: 0,
-          y: 0,
-          image: bgImage,
-          blurAmount: levelData.background.blurAmount || 0, // Optional blur
-        },
-        c
-      ),
-    ];
-  }
-
   // Hide overlays
   winOverlay.style.display = "none";
   loseOverlay.style.display = "none";
 
-
-
-    // If you want to generate extra clouds:
-    generateClouds({
-      startX: 800,
-      endX: levelData.levelEnd + 10000 || 23000,
-      spacingRange: [500, 1200], // Random spacing between clouds
-      yRange: [10, 200], // Range of y-position for the clouds
-      scrollSpeed: 0.1, // Slow scroll speed for background clouds
-    });
+  // If you want to generate extra clouds
+  generateClouds({
+    startX: 800,
+    endX: levelData.levelEnd + 10000 || 23000,
+    spacingRange: [500, 1200],
+    yRange: [10, 100],
+    scrollSpeed: 0.1,
+  });
 
   // Load platforms
   levelData.platforms.forEach(({ x, y, image, collisionOffset }) => {
-    const img = createImage(image);
+    const img = images[image];
     platforms.push(new Platform({ x, y, image: img, collisionOffset }, c));
   });
 
   // Load mushrooms
   levelData.mushrooms.forEach(({ x, y, image, bounceStrength }) => {
-    const img = createImage(image);
+    const img = images[image];
     mushrooms.push(new Mushroom({ x, y, image: img, bounceStrength }, c));
   });
 
-
   if (levelData.foregroundOverlay) {
-    const overlayImg = createImage(levelData.foregroundOverlay.image);
+    const overlayImg = images[levelData.foregroundOverlay.image];
     foregroundOverlay = new ForegroundOverlay(
       {
         x: 0,
@@ -298,7 +293,7 @@ function loadLevel(levelData) {
 
   // Load generic objects
   levelData.genericObjects.forEach(({ x, y, image, scrollSpeed = 1, scale = 1, totalFrames, frameRate, filter }) => {
-    const objImg = createImage(image);
+    const objImg = images[image];
     
     if (image.includes("fire_sprite.png")) {
       genericObjectsFront.push(
@@ -312,24 +307,42 @@ function loadLevel(levelData) {
   });
 
   // Load coins
-  const coinImg = createImage("/src/assets/coin_sprite.png");
+  const coinImg = images["/src/assets/coin_sprite.png"];
   levelData.coins.forEach(({ x, y }) => {
     coins.push(new Coin(x, y, coinImg, c));
   });
 
+  // Load enemies
   levelData.enemies.forEach(({ x, y, width, height, patrolRange, speed, image, totalFrames, frameRate }) => {
-    const enemyImage = createImage(image);
+    const enemyImage = images[image];
     enemies.push(new Enemy({ x, y, width, height, patrolRange, speed, image: enemyImage, totalFrames, frameRate }, c));
   });
 
-  // Finish
-  const finishImg = createImage(levelData.finish.image);
+  // Finish line
+  const finishImg = images[levelData.finish.image];
   finish = new Finish({ x: levelData.finish.x, y: levelData.finish.y, image: finishImg }, c);
 
-  const playerImg = createImage("/src/assets/char_sprite.png");
+  // Initialize player
+  const playerImg = images["/src/assets/char_sprite.png"];
   player = new Player(playerImg, c, canvas);
   player.position = { x: levelData.playerStart.x, y: levelData.playerStart.y };
   player.velocity = { x: 0, y: 0 };
+
+  // Load background
+  if (levelData.background) {
+    const bgImage = images[levelData.background.image];
+    backgrounds = [
+      new Background(
+        {
+          x: 0,
+          y: 0,
+          image: bgImage,
+          blurAmount: levelData.background.blurAmount || 0,
+        },
+        c
+      ),
+    ];
+  }
 
   gameState = "PLAYING";
 }
