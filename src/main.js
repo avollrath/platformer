@@ -175,7 +175,7 @@ let score = 0;
 let gameState = "PLAYING"; // 'PLAYING', 'WIN', 'LOSE'
 
 // Multi-level support *****************************************************************************************************************************************************************************
-let currentLevelIndex = 2;
+let currentLevelIndex = 0;
 const totalLevels = levels.length;
 
 // Player starts with 3 lives
@@ -193,6 +193,10 @@ function createImage(src) {
   img.src = src;
   return img;
 }
+
+let fps = 0;
+let framesThisSecond = 0;
+let lastFpsUpdate = 0;
 
 // Dynamically generate extra clouds (if desired)
 function generateClouds({ startX, endX, spacingRange = [600, 1000], yRange = [50, 300], scrollSpeed = 0.1, moveSpeed = 0.2 }) {
@@ -361,6 +365,13 @@ function animate(timestamp) {
   if (!gameStarted) return;
   requestAnimationFrame(animate);
 
+  if (timestamp > lastFpsUpdate + 1000) {
+    fps = framesThisSecond;
+    framesThisSecond = 0;
+    lastFpsUpdate = timestamp;
+  }
+  framesThisSecond++;
+
   if (gameState !== "PLAYING") {
     // Stop updates if not playing
     return;
@@ -458,6 +469,12 @@ function animate(timestamp) {
   if (isDrawingRectangle) {
     drawRectangle(startX, startY, endX, endY);
   }
+
+  c.save();
+c.font = "16px Arial";
+c.fillStyle = "white";
+c.fillText(`FPS: ${fps}`, 40, 30); // Draw FPS at top-left corner
+c.restore();
 
 
   // =========== Horizontal movement logic ===========

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Jurassic Jump</title>
+    <!-- Link to your external CSS -->
+    <script type="module" crossorigin src="/assets/index-6UCkLOMb.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-DPlduMZH.css">
+  </head>
+  <body>
+    <div class="canvas-wrapper">
+      <canvas id="gameCanvas" width="1920" height="1080"></canvas>
+    </div>
+
+    <div id="startOverlay" class="popup-overlay gorditas-regular">
+      <div class="popup">
+        <img src="/assets/logo-DZmF0BpC.png" class="logo" />
+        <img src="/assets/menu_frame-CniCXryI.png" class="menu-frame" />
+        <h2>Menu</h2>
+        <button id="startGameBtn" class="fancy-btn">Start Game</button>
+        <button id="aboutBtn" class="fancy-btn">About</button>
+      </div>
+    </div>
+
+    <!-- Win popup -->
+    <div id="winOverlay" class="popup-overlay gorditas-regular">
+      <div class="popup">
+        <img src="/assets/logo-DZmF0BpC.png" class="logo" />
+        <img src="/assets/menu_frame-CniCXryI.png" class="menu-frame" />
+        <h2>Level complete!</h2>
+        <button id="nextLevelBtn" class="fancy-btn">Next Level</button>
+      </div>
+    </div>
+
+    <!-- Lose popup -->
+    <div id="loseOverlay" class="popup-overlay gorditas-regular">
+      <div class="popup">
+        <img src="/assets/logo-DZmF0BpC.png" class="logo" />
+        <img src="/assets/menu_frame-CniCXryI.png" class="menu-frame" />
+        <h2>Game Over!</h2>
+        <button id="restartBtn" class="fancy-btn" autofocus>Restart</button>
+      </div>
+    </div>
+
+    <div id="loadingOverlay" class="popup-overlay">
+      <img src="/assets/logo-DZmF0BpC.png" class="logo" />
+      <h1 class="loading-text"></h1>
+      <div id="loadingBarContainer">
+        <div id="loadingBar"></div>
+      </div>
+    </div>
+
+    <div id="debugPanel">
+      <label>Go to X: <input type="number" id="jumpX" /></label>
+      <button id="jumpBtn">Jump</button>
+      <label>
+        <input type="checkbox" id="godModeCheckbox" />
+        God Mode
+      </label>
+      <div>Player X: <span id="playerX">0</span></div>
+      <div>Player Y: <span id="playerY">0</span></div>
+    </div>
+
+  </body>
+</html>
