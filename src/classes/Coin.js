@@ -1,5 +1,5 @@
 export default class Coin {
-  constructor(x, y, spriteSheet, canvasContext, frameCount = 8, frameDuration = 80, pauseFrameIndex = 0, pauseDuration = 600) {
+  constructor(x, y, spriteSheet, canvasContext, frameCount = 8, frameDuration = 40, pauseFrameIndex = 0, pauseDuration = 600) {
     this.c = canvasContext;
     this.position = { x, y };
     this.spriteSheet = spriteSheet;

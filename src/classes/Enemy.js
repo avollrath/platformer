@@ -64,7 +64,7 @@ export default class Enemy {
         }
         this.updateAnimation(timestamp);
       } else if (this.state === 'defeated') {
-        this.vy += 1;
+        this.vy += 2;
         this.position.y += this.vy;
         if (this.position.y > this.context.canvas.height) {
           this.toRemove = true;

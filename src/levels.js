@@ -7,7 +7,7 @@ export const levels = [
 
       bgMusic: "/src/assets/backgroundMusic.mp3",
 
-      foregroundOverlay: {
+      foreground: {
         image: "/src/assets/frame.png",
         blurAmount: 5, // Blur intensity for this level
       },
@@ -55,66 +55,66 @@ export const levels = [
         y: 815,
         width: 220,
         patrolRange: { left: -300, right: 300 }, // relative range for patrol
-        speed: 0.3,
+        speed: 0.6,
         image: "/src/assets/snail_sprite.png",
         totalFrames: 5,
-        frameRate: 200
+        frameRate: 100
       },
       {
         x: 6450,
         y: 815,
         width: 220,
         patrolRange: { left: -300, right: 300 }, // relative range for patrol
-        speed: 0.3,
+        speed: 0.6,
         image: "/src/assets/snail_sprite.png",
         totalFrames: 5,
-        frameRate: 200
+        frameRate: 100
       },
       {
         x: 10870,
         y: 645,
         width: 220,
         patrolRange: { left: -100, right: 100 }, // relative range for patrol
-        speed: 0.3,
+        speed: 0.6,
         image: "/src/assets/snail_sprite.png",
         totalFrames: 5,
-        frameRate: 200
+        frameRate: 100
       },
       {
         x: 18180,
         y: 815,
         width: 220,
         patrolRange: { left: -300, right: 300 }, // relative range for patrol
-        speed: 0.3,
+        speed: 0.6,
         image: "/src/assets/snail_sprite.png",
         totalFrames: 5,
-        frameRate: 200
+        frameRate: 100
       },
       {
         x: 19832,
         y: 815,
         width: 220,
         patrolRange: { left: -300, right: 300 }, // relative range for patrol
-        speed: 0.3,
+        speed: 0.6,
         image: "/src/assets/snail_sprite.png",
         totalFrames: 5,
-        frameRate: 200
+        frameRate: 100
       },
       {
         x: 21324,
         y: 815,
         width: 220,
         patrolRange: { left: -300, right: 300 }, // relative range for patrol
-        speed: 0.3,
+        speed: 0.6,
         image: "/src/assets/snail_sprite.png",
         totalFrames: 5,
-        frameRate: 200
+        frameRate: 100
       },
     ],
   
       // Any special “mushrooms” (bounce pads)
       mushrooms: [
-        { x: 21800, y: 790, image: "/src/assets/mushroom_sprite.png", bounceStrength: 30 },
+        { x: 21800, y: 790, image: "/src/assets/mushroom_sprite.png", bounceStrength: 38 },
       ],
   
   
@@ -512,16 +512,16 @@ export const levels = [
   
       // Mushrooms for bouncing
       mushrooms: [
-        { x: 4200, y: 800, image: "/src/assets/mushroom_sprite.png", bounceStrength: 30 },
-        { x: 6500, y: 800, image: "/src/assets/mushroom_sprite.png", bounceStrength: 30 },
-        { x: 9400, y: 800, image: "/src/assets/mushroom_sprite.png", bounceStrength: 30 },
-        { x: 10700, y: 680, image: "/src/assets/mushroom_sprite.png", bounceStrength: 30 },
-        { x: 13400, y: 800, image: "/src/assets/mushroom_sprite.png", bounceStrength: 30 },
-        { x: 13900, y: 320, image: "/src/assets/mushroom_sprite.png", bounceStrength: 30 },
-        { x: 14850, y: 620, image: "/src/assets/mushroom_sprite.png", bounceStrength: 30 },
-        { x: 16000, y: 620, image: "/src/assets/mushroom_sprite.png", bounceStrength: 30 },
-        { x: 18940, y: 800, image: "/src/assets/mushroom_sprite.png", bounceStrength: 30 },
-        { x: 21700, y: 800, image: "/src/assets/mushroom_sprite.png", bounceStrength: 30 },
+        { x: 4200, y: 800, image: "/src/assets/mushroom_sprite.png", bounceStrength: 38 },
+        { x: 6500, y: 800, image: "/src/assets/mushroom_sprite.png", bounceStrength: 38 },
+        { x: 9400, y: 800, image: "/src/assets/mushroom_sprite.png", bounceStrength: 38 },
+        { x: 10700, y: 680, image: "/src/assets/mushroom_sprite.png", bounceStrength: 38 },
+        { x: 13400, y: 800, image: "/src/assets/mushroom_sprite.png", bounceStrength: 38 },
+        { x: 13900, y: 320, image: "/src/assets/mushroom_sprite.png", bounceStrength: 38 },
+        { x: 14850, y: 620, image: "/src/assets/mushroom_sprite.png", bounceStrength: 38 },
+        { x: 16000, y: 620, image: "/src/assets/mushroom_sprite.png", bounceStrength: 38 },
+        { x: 18940, y: 800, image: "/src/assets/mushroom_sprite.png", bounceStrength: 38 },
+        { x: 21700, y: 800, image: "/src/assets/mushroom_sprite.png", bounceStrength: 38 },
       ],
   
   
@@ -694,7 +694,7 @@ export const levels = [
 
       bgMusic: "/src/assets/backgroundMusic3.mp3",
 
-      foregroundOverlay: {
+      foreground: {
         image: "/src/assets/frame.png",
         blurAmount: 7, // Blur intensity for this level
       },

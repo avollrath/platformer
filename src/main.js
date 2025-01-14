@@ -7,7 +7,7 @@ import Background from "./classes/Background.js";
 import Finish from "./classes/Finish.js";
 import Mushroom from "./classes/Mushroom.js";
 import Enemy from "./classes/Enemy.js";
-import ForegroundOverlay from "./classes/ForegroundOverlay.js";
+import Foreground from "./classes/Foreground.js";
 
 
 // Import your data
@@ -160,15 +160,25 @@ const totalAssets = assetsToLoad.length;
 let player;
 let platforms = [];
 let coins = [];
-let backgrounds = [];
 let mushrooms = [];
 let genericObjects = [];
 let genericObjectsFront = [];
 let enemies = [];
 let finish;
 let movementLocked = false;
-let foregroundOverlay = null;
+let foreground = null;
+let background = null;
 let clouds = [];
+
+const bgCanvas = document.createElement('canvas');
+bgCanvas.width = canvas.width;
+bgCanvas.height = canvas.height;
+const bgCtx = bgCanvas.getContext('2d');
+
+const fgCanvas = document.createElement('canvas');
+fgCanvas.width = canvas.width;
+fgCanvas.height = canvas.height;
+const fgCtx = fgCanvas.getContext('2d');
 
 let scrollOffset = 0;
 let score = 0;
@@ -194,9 +204,6 @@ function createImage(src) {
   return img;
 }
 
-let fps = 0;
-let framesThisSecond = 0;
-let lastFpsUpdate = 0;
 
 // Dynamically generate extra clouds (if desired)
 function generateClouds({ startX, endX, spacingRange = [600, 1000], yRange = [50, 300], scrollSpeed = 0.1, moveSpeed = 0.2 }) {
@@ -242,7 +249,6 @@ function loadLevel(levelData) {
   // Clear old arrays
   platforms = [];
   coins = [];
-  backgrounds = [];
   mushrooms = [];
   genericObjects = [];
   genericObjectsFront = [];
@@ -260,6 +266,42 @@ function loadLevel(levelData) {
   // Hide overlays
   winOverlay.style.display = "none";
   loseOverlay.style.display = "none";
+
+
+
+  if (levelData.background) {
+    const bgImage = images[levelData.background.image];
+    background = new Background(
+      {
+        x: 0,
+        y: 0,
+        image: bgImage,
+        blurAmount: levelData.background.blurAmount || 0,
+      },
+      c
+    );
+  }
+
+  if (levelData.foreground) {
+    const fgImage = images[levelData.foreground.image];
+    foreground= new Foreground(
+      {
+        x: 0,
+        y: 0,
+        image: fgImage,
+        blurAmount: levelData.foreground.blurAmount || 0,
+      },
+      c
+    );
+  }
+
+  if (background) {
+    background.draw(bgCtx);
+  }
+
+  if (foreground) {
+    foreground.draw(fgCtx);
+  }
 
   // If you want to generate extra clouds
   generateClouds({
@@ -282,18 +324,7 @@ function loadLevel(levelData) {
     mushrooms.push(new Mushroom({ x, y, image: img, bounceStrength }, c));
   });
 
-  if (levelData.foregroundOverlay) {
-    const overlayImg = images[levelData.foregroundOverlay.image];
-    foregroundOverlay = new ForegroundOverlay(
-      {
-        x: 0,
-        y: 0,
-        image: overlayImg,
-        blurAmount: levelData.foregroundOverlay.blurAmount || 0,
-      },
-      c
-    );
-  }
+
 
   // Load generic objects
   levelData.genericObjects.forEach(({ x, y, image, scrollSpeed = 1, scale = 1, totalFrames, frameRate, filter }) => {
@@ -326,27 +357,15 @@ function loadLevel(levelData) {
   const finishImg = images[levelData.finish.image];
   finish = new Finish({ x: levelData.finish.x, y: levelData.finish.y, image: finishImg }, c);
 
+
+
   // Initialize player
   const playerImg = images["/src/assets/char_sprite.png"];
   player = new Player(playerImg, c, canvas);
   player.position = { x: levelData.playerStart.x, y: levelData.playerStart.y };
   player.velocity = { x: 0, y: 0 };
 
-  // Load background
-  if (levelData.background) {
-    const bgImage = images[levelData.background.image];
-    backgrounds = [
-      new Background(
-        {
-          x: 0,
-          y: 0,
-          image: bgImage,
-          blurAmount: levelData.background.blurAmount || 0,
-        },
-        c
-      ),
-    ];
-  }
+
 
   gameState = "PLAYING";
 }
@@ -360,11 +379,32 @@ function init() {
 let playerInitialized = false;
 
 
-// =========== ANIMATE (GAME LOOP) ============================================================================
-function animate(timestamp) {
-  if (!gameStarted) return;
-  requestAnimationFrame(animate);
 
+
+
+// =========== ANIMATE (GAME LOOP) ============================================================================
+
+
+let msPrev = window.performance.now();
+const targetFPS = 60;
+const msPerFrame = 1000 / targetFPS;
+let framesThisSecond = 0;
+let lastFpsUpdate = window.performance.now();
+let fps = 0;
+
+function animate(timestamp) {
+  window.requestAnimationFrame(animate);
+
+  const msNow = window.performance.now();
+  const msPassed = msNow - msPrev;
+
+  // Skip frame if not enough time has passed for target FPS
+  if (msPassed < msPerFrame) return;
+
+  const excessTime = msPassed % msPerFrame;
+  msPrev = msNow - excessTime;
+
+  // FPS counter update (optional)
   if (timestamp > lastFpsUpdate + 1000) {
     fps = framesThisSecond;
     framesThisSecond = 0;
@@ -373,37 +413,35 @@ function animate(timestamp) {
   framesThisSecond++;
 
   if (gameState !== "PLAYING") {
-    // Stop updates if not playing
     return;
   }
+
+  // Calculate deltaTime based on elapsed time since last processed frame
+  const deltaTime = msPassed / 1000;
 
   // Clear canvas
   c.clearRect(0, 0, canvas.width, canvas.height);
 
-  const backgroundScrollOffset = scrollOffset * 0.02; 
+  c.drawImage(bgCanvas, 0, 0);
 
-  // Draw backgrounds with slower scroll offset
-  backgrounds.forEach(bg => {
-    bg.draw(backgroundScrollOffset);
-  });
-
+  // Draw and update clouds
   clouds.forEach(cloud => {
-    if (cloud.update) cloud.update(); // Update swaying and drifting
+    if (cloud.update) cloud.update();
     c.save();
-    c.filter = "blur(2px)"; // Optional blur for clouds
+    c.filter = "blur(2px)";
     cloud.draw();
     c.restore();
   });
 
-  // 2) Draw generic objects
+  // Draw generic objects
   genericObjects.forEach(obj => {
     if (obj.update) obj.update();
     c.save();
-    obj.draw(null, timestamp);  // Pass the timestamp here
+    obj.draw(null, timestamp);
     c.restore();
   });
 
-  // 3) Draw the finish line
+  // Draw finish line and check collision
   finish.draw();
   finish.checkCollision(player, () => {
     gameState = "WIN";
@@ -411,6 +449,7 @@ function animate(timestamp) {
     playSound(winSound);
   });
 
+  // Draw generic front objects
   genericObjectsFront.forEach(obj => {
     if (obj.update) obj.update();
     c.save();
@@ -418,7 +457,7 @@ function animate(timestamp) {
     c.restore();
   });
 
-  // 4) Mushrooms
+  // Update mushrooms
   mushrooms.forEach(mushroom => {
     mushroom.updateAnimation(timestamp);
     mushroom.draw();
@@ -427,19 +466,19 @@ function animate(timestamp) {
     });
   });
 
-  // 5) Platforms
+  // Draw platforms
   platforms.forEach(platform => platform.draw());
 
-  // 6) Coins
+  // Draw coins and check collision
   coins.forEach(coin => {
-    coin.draw(timestamp); // Pass the timestamp for animation
+    coin.draw(timestamp);
     coin.checkCollision(player, () => {
       score += 10;
       playSound(coinSound);
     });
   });
 
-  // 7) Enemies
+  // Update and draw enemies
   enemies = enemies.filter(enemy => !enemy.toRemove);
   enemies.forEach(enemy => {
     enemy.update(timestamp);
@@ -448,156 +487,132 @@ function animate(timestamp) {
 
   if (!playerInitialized) {
     player.draw();
-    playerInitialized = true; // Player has been rendered
-    return; // Skip the rest of the loop for this frame
+    playerInitialized = true;
+    return;
   }
 
-  // 8) Update the player
+  // Update player
   player.updateAnimation(timestamp);
   player.update();
   player.draw();
 
-  if (foregroundOverlay) {
-    foregroundOverlay.draw();
-  }
+  c.drawImage(fgCanvas, 0, 0);
 
-  // =========== UI: Score & Lives ===========
+  // UI: Score & Lives
   drawScoreAndLives();
-
-  updateDebugPanel(); 
+  updateDebugPanel();
 
   if (isDrawingRectangle) {
     drawRectangle(startX, startY, endX, endY);
   }
 
+  // Draw FPS (optional)
   c.save();
-c.font = "16px Arial";
-c.fillStyle = "white";
-c.fillText(`FPS: ${fps}`, 40, 30); // Draw FPS at top-left corner
-c.restore();
+  c.font = "16px Arial";
+  c.fillStyle = "white";
+  c.fillText(`FPS: ${fps}`, 40, 30);
+  c.restore();
 
-
-  // =========== Horizontal movement logic ===========
+  // Horizontal movement logic with deltaTime scaling
   if (!movementLocked) {
     if (keys.right.pressed && player.position.x < 400) {
-      player.velocity.x = 1;
+      player.velocity.x = 2;
     } else if (keys.left.pressed && player.position.x > 350) {
-      player.velocity.x = -1;
+      player.velocity.x = -2;
     } else {
-      // Damping if no key pressed
       player.velocity.x *= 0.99;
     }
   } else {
-    // Lock movement during knockback
-    player.velocity.x *= 0.9; // Gradual slowdown to simulate friction
+    player.velocity.x *= 0.99;
   }
 
-  // Scrolling logic
+  // Scrolling logic with deltaTime scaling
   if (!movementLocked) {
+    const scrollAmount = 10;
     if (keys.right.pressed) {
-      scrollOffset += 5;
-      platforms.forEach(p => { p.position.x -= 5; });
-      genericObjects.forEach(g => { g.position.x -= 5 * g.scrollSpeed; });
-      genericObjectsFront.forEach(g => { g.position.x -= 5 * g.scrollSpeed; });
-      coins.forEach(coin => { coin.position.x -= 5; });
-      mushrooms.forEach(m => { m.position.x -= 5; });
-      finish.position.x -= 5;
+      scrollOffset += scrollAmount;
+      platforms.forEach(p => { p.position.x -= scrollAmount; });
+      genericObjects.forEach(g => { g.position.x -= scrollAmount * g.scrollSpeed; });
+      genericObjectsFront.forEach(g => { g.position.x -= scrollAmount * g.scrollSpeed; });
+      coins.forEach(coin => { coin.position.x -= scrollAmount; });
+      mushrooms.forEach(m => { m.position.x -= scrollAmount; });
+      finish.position.x -= scrollAmount;
     } else if (keys.left.pressed) {
-      scrollOffset -= 5;
-      platforms.forEach(p => { p.position.x += 5; });
-      genericObjects.forEach(g => { g.position.x += 5 * g.scrollSpeed; });
-      genericObjectsFront.forEach(g => { g.position.x += 5 * g.scrollSpeed; });
-      coins.forEach(coin => { coin.position.x += 5; });
-      mushrooms.forEach(m => { m.position.x += 5; });
-      finish.position.x += 5;
+      scrollOffset -= scrollAmount;
+      platforms.forEach(p => { p.position.x += scrollAmount; });
+      genericObjects.forEach(g => { g.position.x += scrollAmount * g.scrollSpeed; });
+      genericObjectsFront.forEach(g => { g.position.x += scrollAmount * g.scrollSpeed; });
+      coins.forEach(coin => { coin.position.x += scrollAmount; });
+      mushrooms.forEach(m => { m.position.x += scrollAmount; });
+      finish.position.x += scrollAmount;
     }
   }
 
-
-  // =========== Collision with platforms ===========
+  // Collision with platforms
   let grounded = false;
   platforms.forEach(platform => {
     const playerBox = player.getCollisionBox();
     const platformTop = platform.getCollisionTop();
-  
+
     if (
       playerBox.bottom <= platformTop &&
       playerBox.bottom + player.velocity.y >= platformTop &&
       playerBox.right >= platform.position.x &&
       playerBox.left <= platform.position.x + platform.width
     ) {
-      // Land on platform
       player.velocity.y = 0;
-      grounded = true;  // Player is grounded on at least one platform
+      grounded = true;
     }
   });
-  
-  // Set the player's grounded state after checking all platforms
   player.isOnGround = grounded;
 
-  // =========== Check if player fell out of the world ===========
   if (!player || !playerInitialized) return;
   if (player.position.y > canvas.height + 300) {
     loseLife("fall");
   }
 
-  // =========== Collision with enemies ===========
+  // Collision with enemies
   enemies.forEach(enemy => {
     if (enemy.state === "alive" && enemy.collidesWith(player, scrollOffset)) {
-     
-  
       const playerBottom = player.position.y + player.height;
       const enemyTop = enemy.position.y;
-  
-      // Check if the player is stomping the enemy
+
       if (playerBottom <= enemyTop + 30 && player.velocity.y > 0) {
         console.log("Enemy stomped!");
         enemy.defeat();
-        player.velocity.y = -20; // Bounce the player up after stomping
+        player.velocity.y = -22;
         playSound(enemySound);
-        score += 10; // Add to the score
-        return; // Exit early, no further collision handling needed
-      }
-  
-      // If the player is invincible, ignore damage logic
-      if (player.invincible) {
+        score += 10;
         return;
       }
-  
-      // Player hit from the side
-  
-      // Lock movement during knockback
+      if (player.invincible) return;
+
       movementLocked = true;
       setTimeout(() => {
-        movementLocked = false; // Unlock after knockback duration
+        movementLocked = false;
       }, 500);
-  
-      // Determine the player's relative position to the enemy
+
       const playerWorldX = player.position.x + scrollOffset;
       const enemyWorldX = enemy.position.x;
       const isPlayerToLeft = playerWorldX < enemyWorldX;
-  
-      // Push the player back
+
       if (isPlayerToLeft) {
-        player.position.x -= 20; // Slight position adjustment
-        player.velocity.x = -15; // Knockback to the left
+        player.position.x -= 20;
+        player.velocity.x = -15;
       } else {
-        player.position.x += 20; // Slight position adjustment
-        player.velocity.x = 15; // Knockback to the right
+        player.position.x += 20;
+        player.velocity.x = 15;
       }
-  
-      // Apply vertical knockback
-      player.velocity.y = -10; // Simulate upward knockback
-  
-      // Deduct life and trigger invincibility
-      loseLife("enemy"); // Specify the cause
+
+      player.velocity.y = -10;
+      loseLife("enemy");
       playSound(dieSound);
-      makePlayerInvincible(2000); // Temporarily invincible
+      makePlayerInvincible(2000);
     }
   });
-  
-  
 }
+
+
 
 
 function makePlayerInvincible(duration) {
@@ -620,21 +635,16 @@ function drawScoreAndLives() {
   const textX = canvas.width - 200;
   const textY = 100;
 
+  c.save();
   c.shadowColor = "rgba(0, 0, 0, 0.8)";
   c.shadowBlur = 3;
   c.shadowOffsetX = 4;
   c.shadowOffsetY = 4;
-
   c.font = "56px Gorditas";
   c.fillStyle = "yellow";
   c.textAlign = "center";
   c.fillText(scoreText, textX, textY);
-
-  // Reset shadow
-  c.shadowColor = "rgba(0, 0, 0, 0)";
-  c.shadowBlur = 0;
-  c.shadowOffsetX = 0;
-  c.shadowOffsetY = 0;
+  c.restore();
 
   // Lives (hearts)
   const heartImg = createImage("/src/assets/heart.png");
@@ -699,7 +709,7 @@ window.addEventListener("keydown", ({ code }) => {
     case "KeyW":
     case "ArrowUp":
       if (player.velocity.y === 0) {
-        player.velocity.y = -20;
+        player.velocity.y = -28;
         playSound(jumpSound);
       }
       break;

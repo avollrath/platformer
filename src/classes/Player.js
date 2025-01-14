@@ -3,14 +3,14 @@ export default class Player {
     this.c = canvasContext;
     this.canvas = canvas;
     this.position = { x: 100, y: 100 };
-    this.velocity = { x: 0, y: 1 };
+    this.velocity = { x: 0, y: 0 };
     this.image = image;
     this.isOnGround = false;
     
     // Animation properties for an 8-frame sprite sheet
     this.totalFrames = 8;
     this.frameIndex = 0;
-    this.frameRate = 120;      // Adjust speed as needed (ms per frame)
+    this.frameRate = 100;      // Adjust speed as needed (ms per frame)
     this.lastFrameTime = 0;
     
     // Calculate frame dimensions based on the sprite sheet
@@ -23,7 +23,7 @@ export default class Player {
     this.invincible = false;
     this.flicker = false;
   
-    this.gravity = 0.5;
+    this.gravity = 1;
   
     // Offsets to shrink collision box
     this.offsetLeft = 50; 
@@ -39,37 +39,6 @@ export default class Player {
     const ctx = this.c;
     this.c.save();
 
-    // Draw shadow only if the player is on the ground
-  if (this.isOnGround) {
-    // *** Draw Custom Bottom Shadow with Blur ***
-    const shadowCenterX = this.position.x + this.width / 2;
-    const shadowCenterY = this.position.y + this.height * 0.95;
-    const shadowWidth = this.width * 0.7;
-    const shadowHeight = this.height * 0.05;
-
-    const gradient = ctx.createRadialGradient(
-      shadowCenterX, shadowCenterY, 0,
-      shadowCenterX, shadowCenterY, shadowWidth / 2
-    );
-    gradient.addColorStop(0, 'rgba(13, 56, 18, 0.64)');
-    gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
-
-    ctx.filter = 'blur(8px)';
-    ctx.fillStyle = gradient;
-    ctx.beginPath();
-    ctx.ellipse(
-      shadowCenterX,
-      shadowCenterY,
-      shadowWidth / 2,
-      shadowHeight / 2,
-      0,
-      0,
-      2 * Math.PI
-    );
-    ctx.fill();
-    ctx.filter = 'none';
-    // *** End Drawing Custom Blurred Shadow ***
-  }
 
     // Determine drawing parameters for facing direction
     if (this.facingLeft) {
