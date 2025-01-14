@@ -3,39 +3,34 @@ export default class Background {
     this.c = canvasContext;
     this.position = { x, y };
     this.image = image;
-    this.blurAmount = blurAmount; 
-    // Store original image dimensions for scaling
-    this.originalWidth = image.width;
-    this.originalHeight = image.height;
+    this.blurAmount = blurAmount;
+    this.scaleFactor = 1.02; // Scale up by 102%
   }
 
-  draw(scrollOffset = 0) {
-    const ctx = this.c;
-    
-    // Save canvas state and apply blur if needed
-    ctx.save();
-    if (this.blurAmount > 0) {
-      ctx.filter = `blur(${this.blurAmount}px)`;
+  draw(context = this.c) {  // Use passed context or default to this.c
+    const scaledWidth = this.image.width * this.scaleFactor;
+    const scaledHeight = this.image.height * this.scaleFactor;
+
+    // Center the overlay properly while scaling
+    const offsetX = (scaledWidth - this.image.width) / 2;
+    const offsetY = (scaledHeight - this.image.height) / 2;
+
+    if (this.blurAmount) {
+      context.save();
+      context.filter = `blur(${this.blurAmount}px)`;
     }
 
-    // Scaling factor for 120% size
-    const scale = 1.2;
-    const scaledWidth = this.originalWidth * scale;
-    const scaledHeight = this.originalHeight * scale;
-
-    // Align the bottom of the background image with the bottom of the canvas
-    const canvasHeight = ctx.canvas.height;
-    const alignedY = canvasHeight - scaledHeight;
-
-    // Draw the background with scaling and parallax scroll offset
-    ctx.drawImage(
+    // Draw the image with scaling
+    context.drawImage(
       this.image,
-      this.position.x - scrollOffset,  // Adjust x-position by scroll offset
-      alignedY,                          // Align bottom of image with canvas bottom
+      this.position.x - offsetX,
+      this.position.y - offsetY,
       scaledWidth,
       scaledHeight
     );
 
-    ctx.restore();
+    if (this.blurAmount) {
+      context.restore();
+    }
   }
 }

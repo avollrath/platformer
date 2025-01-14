@@ -14,7 +14,7 @@ export const levels = [
 
       background: {
         image: "/src/assets/background_noClouds.jpg",
-        blurAmount: 4,
+        blurAmount: 20,
       },
   
       // Where this level ends (useful for positioning objects or random generation)
@@ -136,7 +136,7 @@ export const levels = [
           x: 23010, 
           y: 620, 
           image: "/src/assets/fire_sprite.png", 
-          scrollSpeed: 1, 
+          scrollspeed: 2, 
           totalFrames: 6,     
           frameRate:140,
           filter: "none",
@@ -146,7 +146,7 @@ export const levels = [
           x: 23402, 
           y: 620, 
           image: "/src/assets/fire_sprite.png", 
-          scrollSpeed: 1, 
+          scrollspeed: 2, 
           totalFrames: 6,     
           frameRate:130,
           filter: "none",
@@ -423,7 +423,7 @@ export const levels = [
           y: 820,
           width: 150,
           patrolRange: { left: -200, right: 200 }, // relative range for patrol
-          speed: 1,
+          speed: 2,
           image: "/src/assets/enemy_sprite.png",
           frameRate: 200
         },
@@ -432,7 +432,7 @@ export const levels = [
           y: 820,
           width: 150,
           patrolRange: { left: -500, right: 400 }, // relative range for patrol
-          speed: 1,
+          speed: 2,
           image: "/src/assets/enemy_sprite.png"
         },
         {
@@ -440,7 +440,7 @@ export const levels = [
           y: 600,
           width: 150,
           patrolRange: { left: -200, right: 100 }, // relative range for patrol
-          speed: 1,
+          speed: 2,
           image: "/src/assets/enemy_sprite.png"
         },
         {
@@ -448,7 +448,7 @@ export const levels = [
           y: 820,
           width: 150,
           patrolRange: { left: -480, right: 500 }, // relative range for patrol
-          speed: 1,
+          speed: 2,
           image: "/src/assets/enemy_sprite.png"
         },
         {
@@ -456,7 +456,7 @@ export const levels = [
           y: 820,
           width: 150,
           patrolRange: { left: -480, right: 500 }, // relative range for patrol
-          speed: 1,
+          speed: 2,
           image: "/src/assets/enemy_sprite.png"
         },
         {
@@ -464,7 +464,7 @@ export const levels = [
           y: 290,
           width: 150,
           patrolRange: { left: -150, right: 100 }, // relative range for patrol
-          speed: 1,
+          speed: 2,
           image: "/src/assets/enemy_sprite.png"
         },
         {
@@ -472,7 +472,7 @@ export const levels = [
           y: 820,
           width: 150,
           patrolRange: { left: -480, right: 500 }, // relative range for patrol
-          speed: 1,
+          speed: 2,
           image: "/src/assets/enemy_sprite.png"
         },
         {
@@ -480,7 +480,7 @@ export const levels = [
           y: 490,
           width: 150,
           patrolRange: { left: -150, right: 100 }, // relative range for patrol
-          speed: 1,
+          speed: 2,
           image: "/src/assets/enemy_sprite.png"
         },
         {
@@ -488,7 +488,7 @@ export const levels = [
           y: 820,
           width: 150,
           patrolRange: { left: -480, right: 500 }, // relative range for patrol
-          speed: 1,
+          speed: 2,
           image: "/src/assets/enemy_sprite.png"
         },
         {
@@ -496,7 +496,7 @@ export const levels = [
           y: 820,
           width: 150,
           patrolRange: { left: -180, right: 200 }, // relative range for patrol
-          speed: 1,
+          speed: 2,
           image: "/src/assets/enemy_sprite.png"
         },
         {
@@ -504,7 +504,7 @@ export const levels = [
           y: 820,
           width: 150,
           patrolRange: { left: -180, right: 200 }, // relative range for patrol
-          speed: 1,
+          speed: 2,
           image: "/src/assets/enemy_sprite.png"
         },
         

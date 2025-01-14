@@ -185,7 +185,7 @@ let score = 0;
 let gameState = "PLAYING"; // 'PLAYING', 'WIN', 'LOSE'
 
 // Multi-level support *****************************************************************************************************************************************************************************
-let currentLevelIndex = 0;
+let currentLevelIndex = 1;
 const totalLevels = levels.length;
 
 // Player starts with 3 lives
@@ -259,6 +259,9 @@ function loadLevel(levelData) {
   clouds = [];
   
   c.clearRect(0, 0, canvas.width, canvas.height);
+  bgCtx.clearRect(0, 0, bgCanvas.width, bgCanvas.height);
+  fgCtx.clearRect(0, 0, bgCanvas.width, bgCanvas.height);
+  
   if (levelData.bgMusic) {
     playBackgroundMusic(levelData.bgMusic);
   }
@@ -416,8 +419,6 @@ function animate(timestamp) {
     return;
   }
 
-  // Calculate deltaTime based on elapsed time since last processed frame
-  const deltaTime = msPassed / 1000;
 
   // Clear canvas
   c.clearRect(0, 0, canvas.width, canvas.height);
